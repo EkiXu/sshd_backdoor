@@ -12,7 +12,7 @@ Hook Read Syscall enter: check the pid logged. logging the user_space_char_buffe
 
 Hook Read Syscall exit: check the pid logged. find the buffer and change the buffer into our Key. Then delete pid in map to avoid blocking administrators' keys be read.
 
-## test
+## Test
 
 ENABLE DEBUG MODE AT ``common.h:9``
 
@@ -42,11 +42,11 @@ then your can ssh -i with your private key
 ssh -i ./test/id root@127.0.0.1
 ```
 
-## use your own pub key
+## Use your own pub key
 
 replace ``main.rs:100``
 
-## vmlinux.h
+## Generate vmlinux.h
 
 this repo contains a vmlinux.h which is generated in Linux DUBHE-VM 5.15.0-58-generic #64-Ubuntu
 
@@ -55,6 +55,16 @@ To generate an updated `vmlinux.h`:
 ```shell
 $ bpftool btf dump file /sys/kernel/btf/vmlinux format c > ./vmlinux.h
 $ ln -s ./vmlinux.h src/bpf/vmlinux.h
+```
+
+## Size
+
+You can shrink the target binary to only 500+ kb via striping
+
+```
+> strip -s target/release/sshd_backdoor
+> ls -lh target/release/sshd_backdoor
+-rwxrwxr-x 2 eki eki 587K Feb 14 16:03 target/release/sshd_backdoor
 ```
 
 ## Disclaimer

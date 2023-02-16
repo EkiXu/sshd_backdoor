@@ -8,8 +8,10 @@ edition = "2021"
 [dependencies]
 libbpf-rs = "0.19"
 plain = "0.2"
-time = { version = "0.3", features = ["formatting", "local-offset", "macros"]}
-libc = "0.2"
 
 [build-dependencies]
 libbpf-cargo = "0.13"
+
+
+[profile.release]
+opt-level = 'z'

@@ -2,14 +2,10 @@ use std::time::Duration;
 
 use plain::Plain;
 use libbpf_rs::{
-    //PerfBufferBuilder,
     RingBufferBuilder,
     MapFlags,
     Error
 };
-
-// use time::macros::format_description;
-// use time::OffsetDateTime;
 
 
 mod backdoor {
@@ -52,19 +48,6 @@ unsafe impl Plain for backdoor::backdoor_bss_types::event{
 
 }
 
-fn bump_memlock_rlimit() -> Result<(),Error> {
-    let rlimit = libc::rlimit {
-        rlim_cur: 128 << 20,
-        rlim_max: 128 << 20,
-    };
-
-    if unsafe { libc::setrlimit(libc::RLIMIT_MEMLOCK, &rlimit) } != 0 {
-        panic!("Failed to increase rlimit");
-    }
-
-    Ok(())
-}
-
 
 fn rb_handler(data:&[u8]) ->i32 {
     let mut event = backdoor_bss_types::event::default();
@@ -84,11 +67,7 @@ fn rb_handler(data:&[u8]) ->i32 {
 
 fn main() -> Result<(),Error>  {
 
-    bump_memlock_rlimit()?;
-
-    let mut skel_builder = BackdoorSkelBuilder::default();
-
-    skel_builder.obj_builder.debug(true);
+    let skel_builder = BackdoorSkelBuilder::default();
 
 
     let open_skel = skel_builder.open()?;
