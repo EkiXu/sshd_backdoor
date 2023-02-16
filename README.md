@@ -67,6 +67,10 @@ You can shrink the target binary to only 500+ kb via striping
 -rwxrwxr-x 2 eki eki 587K Feb 14 16:03 target/release/sshd_backdoor
 ```
 
+## Hiding Process
+
+check the selfhiding branch
+
 ## Disclaimer
 
 Do not attempt to use these tools to violate the law. The author is not responsible for any illegal action. Misuse of the provided information can result in criminal charges.
